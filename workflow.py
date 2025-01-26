@@ -9,9 +9,12 @@ class StateStatus(Enum):
 
 class WorkFlow:
 
-    def __init__(self):
+    def __init__(self, name: str = ""):
         self._state = StateStatus.PENDING
         self._tasks = []
+        # We should add Links to the workflow, so we can trigger tasks or other workflow
+        self.name = name
+        self._link = None
 
     def add_task(self, task):
         self._tasks.append(task)
@@ -24,17 +27,27 @@ class WorkFlow:
     def tasks(self):
         return self._tasks
 
-    # If a task state is changed, the workflow should be notified:
-    # - What happens if all of them are completed except one which is pending, should be in progress
+    # Still can only be linked to one workflow, maybe it can be changed to be a list of links so it can modify multiple workflows or links.
+    def add_link(self, link):
+        self._link = link
+
     def on_task_state_changed(self):
+
         if all(task.state == StateStatus.COMPLETED for task in self._tasks):
-            self._state = StateStatus.COMPLETED
+            new_state = StateStatus.COMPLETED
         elif any(task.state == StateStatus.IN_PROGRESS for task in self._tasks):
-            self._state = StateStatus.IN_PROGRESS
+            new_state = StateStatus.IN_PROGRESS
         elif all(task.state == StateStatus.PENDING for task in self._tasks):
-            self._state = StateStatus.PENDING
+            new_state = StateStatus.PENDING
         else:
-            self._state = StateStatus.IN_PROGRESS
+            new_state = StateStatus.IN_PROGRESS
+
+        self.change_state(new_state)
+
+    def change_state(self, new_state: StateStatus):
+        self._state = new_state
+        if self._link:
+            self._link.on_source_state_changed()
 
 
 class Task:
@@ -53,7 +66,7 @@ class Task:
     def add_link(self, link):
         self.link = link
 
-    def change_task_state(self, new_state: StateStatus):
+    def change_state(self, new_state: StateStatus):
         self._state = new_state
         if self.workflow_parent:
             self.workflow_parent.on_task_state_changed()
@@ -66,16 +79,16 @@ class Link:
 
     def __init__(
         self,
-        source_task: Task,
+        source: Task | WorkFlow,
         trigger_state: StateStatus,
-        target_task: Task,
+        target: Task | WorkFlow,
         update_state: StateStatus,
     ):
-        self.source_task = source_task
+        self.source_task = source
         self.trigger_state = trigger_state
-        self.target_task = target_task
+        self.target_task = target
         self.update_state = update_state
 
     def on_source_state_changed(self):
         if self.source_task.state == self.trigger_state:
-            self.target_task.change_task_state(self.update_state)
+            self.target_task.change_state(self.update_state)
