@@ -143,7 +143,7 @@ class Test_TestWorkFlow(unittest.TestCase):
         onboarding.add_task(onboarding_sign_up)
         onboarding.add_task(onboarding_verify_email)
 
-        # In order to have 100% completed th profile both must be completed, if not the profile is in progress
+        # In order to have 100% completed the profile both must be completed, if not the profile is in progress
         update_profile_update_name = Task("Update Name", update_profile)
         update_profile_update_profile_picture = Task(
             "Update Profile Picture", update_profile
