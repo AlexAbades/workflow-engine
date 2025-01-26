@@ -162,5 +162,9 @@ class Test_TestWorkFlow(unittest.TestCase):
 
         onboarding_sign_up.change_state(StateStatus.COMPLETED)
         onboarding_verify_email.change_state(StateStatus.COMPLETED)
-        
+
         self.assertEqual(update_profile.state, StateStatus.IN_PROGRESS)
+
+
+if __name__ == "__main__":
+    unittest.main()

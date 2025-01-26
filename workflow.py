@@ -55,7 +55,7 @@ class Task:
     def __init__(self, name: str, workflow_parent: WorkFlow):
         self.name = name
         self.workflow_parent = workflow_parent
-        self.link = None
+        self._link = None
         self._state = StateStatus.PENDING
 
     @property
@@ -64,15 +64,15 @@ class Task:
 
     # Just ads one link to a task, maybe could be more than one link if this tasks triggers multiple tasks
     def add_link(self, link):
-        self.link = link
+        self._link = link
 
     def change_state(self, new_state: StateStatus):
         self._state = new_state
         if self.workflow_parent:
             self.workflow_parent.on_task_state_changed()
 
-        if self.link:
-            self.link.on_source_state_changed()
+        if self._link:
+            self._link.on_source_state_changed()
 
 
 class Link:
@@ -84,11 +84,11 @@ class Link:
         target: Task | WorkFlow,
         update_state: StateStatus,
     ):
-        self.source_task = source
+        self.source = source
         self.trigger_state = trigger_state
-        self.target_task = target
+        self.target = target
         self.update_state = update_state
 
     def on_source_state_changed(self):
-        if self.source_task.state == self.trigger_state:
-            self.target_task.change_state(self.update_state)
+        if self.source.state == self.trigger_state:
+            self.target.change_state(self.update_state)
